@@ -449,7 +449,7 @@ public abstract class HotSpotHostForeignCallsProvider extends HotSpotForeignCall
         if (c.useVectorizedMismatchIntrinsic) {
             assert (c.vectorizedMismatch != 0L);
             registerForeignCall(VECTORIZED_MISMATCHED, c.vectorizedMismatch, NativeCall, PRESERVES_REGISTERS, LEAF, REEXECUTABLE_ONLY_AFTER_EXCEPTION,
-                    NamedLocationIdentity.any());
+                            NamedLocationIdentity.any());
 
         }
     }
