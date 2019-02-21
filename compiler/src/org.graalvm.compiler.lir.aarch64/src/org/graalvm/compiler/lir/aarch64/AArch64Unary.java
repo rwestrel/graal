@@ -93,5 +93,9 @@ public class AArch64Unary {
             }
             return false;
         }
+
+        public boolean isSigned() {
+            return isSigned;
+        }
     }
 }

@@ -39,6 +39,7 @@ import org.graalvm.compiler.graph.Node;
 import org.graalvm.compiler.lir.LIRFrameState;
 import org.graalvm.compiler.lir.LabelRef;
 import org.graalvm.compiler.lir.Variable;
+import org.graalvm.compiler.lir.aarch64.AArch64AddressValue;
 import org.graalvm.compiler.lir.aarch64.AArch64ArithmeticOp;
 import org.graalvm.compiler.lir.aarch64.AArch64ControlFlow;
 import org.graalvm.compiler.lir.gen.LIRGeneratorTool;
@@ -47,19 +48,11 @@ import org.graalvm.compiler.nodes.DeoptimizingNode;
 import org.graalvm.compiler.nodes.IfNode;
 import org.graalvm.compiler.nodes.NodeView;
 import org.graalvm.compiler.nodes.ValueNode;
-import org.graalvm.compiler.nodes.calc.AddNode;
-import org.graalvm.compiler.nodes.calc.AndNode;
-import org.graalvm.compiler.nodes.calc.BinaryNode;
-import org.graalvm.compiler.nodes.calc.LeftShiftNode;
-import org.graalvm.compiler.nodes.calc.NotNode;
-import org.graalvm.compiler.nodes.calc.OrNode;
-import org.graalvm.compiler.nodes.calc.RightShiftNode;
-import org.graalvm.compiler.nodes.calc.SubNode;
-import org.graalvm.compiler.nodes.calc.UnsignedRightShiftNode;
-import org.graalvm.compiler.nodes.calc.XorNode;
+import org.graalvm.compiler.nodes.calc.*;
 import org.graalvm.compiler.nodes.memory.Access;
 
 import jdk.vm.ci.aarch64.AArch64Kind;
+import org.graalvm.compiler.nodes.memory.LIRLowerableAccess;
 
 public class AArch64NodeMatchRules extends NodeMatchRules {
     private static final EconomicMap<Class<? extends Node>, AArch64ArithmeticOp> nodeOpMap;
@@ -201,6 +194,22 @@ public class AArch64NodeMatchRules extends NodeMatchRules {
             }
         }
         return null;
+    }
+
+    @MatchRule("(SignExtend Read=access)")
+    @MatchRule("(SignExtend FloatingRead=access)")
+    public ComplexMatchResult signExtend(SignExtendNode root, LIRLowerableAccess access) {
+        AArch64Kind readKind = getMemoryKind(access);
+        int resultBits = root.getResultBits();
+        return builder -> getArithmeticLIRGenerator().emitExtendMemory(true, readKind, resultBits, (AArch64AddressValue) operand(access.getAddress()), getState(access));
+    }
+
+    @MatchRule("(ZeroExtend Read=access)")
+    @MatchRule("(ZeroExtend FloatingRead=access)")
+    public ComplexMatchResult zeroExtend(ZeroExtendNode root, LIRLowerableAccess access) {
+        AArch64Kind readKind = getMemoryKind(access);
+        int resultBits = root.getResultBits();
+        return builder -> getArithmeticLIRGenerator().emitExtendMemory(false, readKind, resultBits, (AArch64AddressValue) operand(access.getAddress()), getState(access));
     }
 
     @Override
